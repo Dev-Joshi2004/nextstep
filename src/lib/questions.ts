@@ -1,0 +1,28 @@
+const questions = [
+  "Would you like working outdoors rather than in an office.",
+  "Do you enjoy building or assembling physical objects?",
+  "Would you like a job that involves driving, operating, or controlling machines?",
+  "Do you prefer learning by doing rather than reading instructions?",
+  "Do you enjoy solving math or science problems?",
+  "Would you like a job that involves researching or analyzing data?",
+  "Do you like learning how and why things work?",
+  "Do you prefer logic and facts over opinions when making decisions?",
+  "Do you prefer unstructured tasks where you can be original?",
+  "Do you enjoy brainstorming new ideas without strict rules?",
+  "Do you prefer open-ended projects where there isn’t one “right” answer?",
+  "Would you like a job that values innovation and imagination?",
+  "Do you prefer working in teams over working alone?",
+  "Would you like a job where communication and empathy are important?",
+  "Do you enjoy listening and giving advice to others?",
+  "Do you enjoy leading group discussions or workshops?",
+  "Do you enjoy convincing others to see your point of view?",
+  "Would you like a job where you make business decisions?",
+  "Do you enjoy taking risks for potential rewards?",
+  "Do you prefer fast-paced, competitive environments?",
+  "Do you enjoy organizing files, records, or data?",
+  "Would you like a job where accuracy and attention to detail matter?",
+  "Do you enjoy working with numbers, charts, or spreadsheets?",
+  "Do you enjoy checking work for errors or inconsistencies?",
+]
+
+export { questions }
