@@ -1,7 +1,6 @@
 "use client"
 
 import type React from "react"
-
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -9,8 +8,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Brain, Mail, Phone, MapPin, Clock, Send, MessageCircle, HelpCircle, Users } from "lucide-react"
-import Link from "next/link"
+import { Mail, Phone, MapPin, Clock, Send, MessageCircle, HelpCircle, Users } from "lucide-react"
 
 export default function ContactPage() {
   const [formData, setFormData] = useState({
@@ -33,22 +31,35 @@ export default function ContactPage() {
     setIsSubmitting(true)
     setSubmitMessage(null)
 
-    // Simulate form submission
     try {
-      await new Promise((resolve) => setTimeout(resolve, 2000))
-      setSubmitMessage({
-        type: "success",
-        text: "Thank you for your message! We'll get back to you within 24 hours.",
+      const response = await fetch("/api/contact", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formData),
       })
-      setFormData({
-        name: "",
-        email: "",
-        phone: "",
-        subject: "",
-        message: "",
-        inquiryType: "",
-      })
+
+      const result = await response.json()
+
+      if (response.ok) {
+        setSubmitMessage({
+          type: "success",
+          text: "Thank you for your message! We'll get back to you within 24 hours.",
+        })
+        setFormData({
+          name: "",
+          email: "",
+          phone: "",
+          subject: "",
+          message: "",
+          inquiryType: "",
+        })
+      } else {
+        throw new Error(result.error || "Failed to submit form")
+      }
     } catch (error) {
+      console.error("Form submission error:", error)
       setSubmitMessage({
         type: "error",
         text: "Sorry, there was an error sending your message. Please try again.",
@@ -60,29 +71,6 @@ export default function ContactPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
-      {/* Navigation */}
-      <nav className="relative z-50 flex items-center justify-between p-6 lg:px-12">
-        <Link href="/" className="flex items-center space-x-2">
-          <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl flex items-center justify-center">
-            <Brain className="w-6 h-6 text-white" />
-          </div>
-          <span className="text-2xl font-bold text-white">CareerPath</span>
-        </Link>
-        <div className="hidden md:flex items-center space-x-8">
-          <Link href="/" className="text-gray-300 hover:text-white transition-colors">
-            Home
-          </Link>
-          <Link href="/about" className="text-gray-300 hover:text-white transition-colors">
-            About
-          </Link>
-          <Link href="/auth/login">
-            <Button variant="outline" className="border-white/20 text-white hover:bg-white/10 bg-transparent">
-              Sign In
-            </Button>
-          </Link>
-        </div>
-      </nav>
-
       <div className="px-6 lg:px-12 pb-20">
         {/* Hero Section */}
         <section className="max-w-4xl mx-auto pt-20 pb-16 text-center">
@@ -111,6 +99,7 @@ export default function ContactPage() {
                 </CardHeader>
                 <CardContent>
                   <form onSubmit={handleSubmit} className="space-y-6">
+                    {/* ... existing form fields ... */}
                     <div className="grid md:grid-cols-2 gap-6">
                       <div className="space-y-2">
                         <Label htmlFor="name" className="text-white">
@@ -210,11 +199,10 @@ export default function ContactPage() {
 
                     {submitMessage && (
                       <div
-                        className={`p-4 rounded-lg ${
-                          submitMessage.type === "success"
+                        className={`p-4 rounded-lg ${submitMessage.type === "success"
                             ? "bg-green-500/20 border border-green-500/30 text-green-300"
                             : "bg-red-500/20 border border-red-500/30 text-red-300"
-                        }`}
+                          }`}
                       >
                         {submitMessage.text}
                       </div>
@@ -253,8 +241,8 @@ export default function ContactPage() {
                     </div>
                     <div>
                       <h3 className="text-white font-semibold mb-1">Email</h3>
-                      <p className="text-gray-300">support@careerpath.in</p>
-                      <p className="text-gray-300">info@careerpath.in</p>
+                      <p className="text-gray-300">support@nextstep.in</p>
+                      <p className="text-gray-300">hello@nextstep.in</p>
                     </div>
                   </div>
 
@@ -265,7 +253,7 @@ export default function ContactPage() {
                     <div>
                       <h3 className="text-white font-semibold mb-1">Phone</h3>
                       <p className="text-gray-300">+91 98765 43210</p>
-                      <p className="text-gray-300">+91 87654 32109</p>
+                      <p className="text-gray-300">Available Mon-Fri, 9 AM - 6 PM</p>
                     </div>
                   </div>
 
@@ -276,11 +264,11 @@ export default function ContactPage() {
                     <div>
                       <h3 className="text-white font-semibold mb-1">Address</h3>
                       <p className="text-gray-300">
-                        123 Education Hub
+                        Innovation Hub
                         <br />
-                        Sector 18, Gurgaon
+                        Delhi, India
                         <br />
-                        Haryana 122015, India
+                        Remote Team
                       </p>
                     </div>
                   </div>
@@ -290,16 +278,16 @@ export default function ContactPage() {
                       <Clock className="w-6 h-6 text-white" />
                     </div>
                     <div>
-                      <h3 className="text-white font-semibold mb-1">Business Hours</h3>
-                      <p className="text-gray-300">Monday - Friday: 9:00 AM - 6:00 PM</p>
-                      <p className="text-gray-300">Saturday: 10:00 AM - 4:00 PM</p>
-                      <p className="text-gray-300">Sunday: Closed</p>
+                      <h3 className="text-white font-semibold mb-1">Response Time</h3>
+                      <p className="text-gray-300">Email: Within 24 hours</p>
+                      <p className="text-gray-300">Contact Form: Within 48 hours</p>
+                      <p className="text-gray-300">We're building something amazing!</p>
                     </div>
                   </div>
                 </CardContent>
               </Card>
 
-              {/* FAQ */}
+              {/* ... existing FAQ and Support Team cards ... */}
               <Card className="bg-white/10 backdrop-blur-lg border-white/20">
                 <CardHeader>
                   <CardTitle className="text-xl text-white flex items-center">
@@ -311,40 +299,40 @@ export default function ContactPage() {
                   <div>
                     <h4 className="text-white font-medium mb-2">How accurate is the assessment?</h4>
                     <p className="text-gray-300 text-sm">
-                      Our assessment has a 95% accuracy rate based on scientific RIASEC model validation.
+                      Our assessment is based on the scientifically validated RIASEC model used by career counselors
+                      worldwide.
                     </p>
                   </div>
                   <div>
                     <h4 className="text-white font-medium mb-2">Is the service free?</h4>
                     <p className="text-gray-300 text-sm">
-                      Yes! Our basic career assessment and recommendations are completely free for all students.
+                      Yes! Our career assessment and basic recommendations are completely free for all students.
                     </p>
                   </div>
                   <div>
                     <h4 className="text-white font-medium mb-2">Can I retake the assessment?</h4>
                     <p className="text-gray-300 text-sm">
-                      You can retake the assessment anytime to track changes in your interests.
+                      You can retake the assessment anytime to track changes in your interests and preferences.
                     </p>
                   </div>
                 </CardContent>
               </Card>
 
-              {/* Support Team */}
               <Card className="bg-white/10 backdrop-blur-lg border-white/20">
                 <CardHeader>
                   <CardTitle className="text-xl text-white flex items-center">
                     <Users className="w-5 h-5 mr-3" />
-                    Our Support Team
+                    Our Team
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <p className="text-gray-300 text-sm mb-4">
-                    Our team of certified career counselors and education experts are here to help you make informed
-                    decisions about your future.
+                    We're a passionate team of developers and educators building innovative solutions to help students
+                    make informed career decisions.
                   </p>
                   <div className="flex items-center space-x-2">
                     <div className="flex -space-x-2">
-                      {[1, 2, 3, 4].map((i) => (
+                      {[1, 2, 3].map((i) => (
                         <div
                           key={i}
                           className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full border-2 border-slate-900 flex items-center justify-center"
@@ -353,7 +341,7 @@ export default function ContactPage() {
                         </div>
                       ))}
                     </div>
-                    <span className="text-gray-300 text-sm">24/7 Support Available</span>
+                    <span className="text-gray-300 text-sm">Dedicated Support Team</span>
                   </div>
                 </CardContent>
               </Card>
