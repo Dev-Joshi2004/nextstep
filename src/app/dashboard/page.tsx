@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
+import { CustomPieChart } from "@/components/ui/pie-chart"
 import { createClient } from "@/lib/supabase/client"
 import { useRouter } from "next/navigation"
 import {
@@ -14,7 +15,6 @@ import {
   Briefcase,
   User,
   Settings,
-  LogOut,
   TrendingUp,
   Award,
   Target,
@@ -22,6 +22,8 @@ import {
   Clock,
   Star,
   ArrowRight,
+  PieChart,
+  LogOut,
 } from "lucide-react"
 import Link from "next/link"
 
@@ -34,6 +36,7 @@ interface Profile {
   school?: string
   city?: string
   state?: string
+  avatar_url?: string
 }
 
 interface CareerRecommendation {
@@ -102,11 +105,6 @@ export default function DashboardPage() {
     fetchDashboardData()
   }, [supabase, router])
 
-  const handleSignOut = async () => {
-    await supabase.auth.signOut()
-    router.push("/")
-  }
-
   const getInterestColor = (interest: string): string => {
     const colors: Record<string, string> = {
       realistic: "from-green-500 to-teal-500",
@@ -117,6 +115,44 @@ export default function DashboardPage() {
       conventional: "from-gray-500 to-slate-500",
     }
     return colors[interest] || "from-blue-500 to-purple-500"
+  }
+
+  const getInitials = (name: string) => {
+    return name
+      .split(" ")
+      .map((word) => word.charAt(0))
+      .join("")
+      .toUpperCase()
+      .slice(0, 2)
+  }
+
+  const calculateProfileScore = () => {
+    if (!profile) return 0
+    const fields = [profile.full_name, profile.phone, profile.grade, profile.school, profile.city, profile.state]
+    const completedFields = fields.filter((field) => field && field.trim() !== "").length
+    return Math.round((completedFields / fields.length) * 100)
+  }
+
+  const getPieChartData = () => {
+    if (!latestResults) return []
+
+    const interestColors = {
+      realistic: "#10b981",
+      investigative: "#3b82f6",
+      artistic: "#8b5cf6",
+      social: "#f97316",
+      enterprising: "#eab308",
+      conventional: "#6b7280",
+    }
+
+    return [
+      { name: "Realistic", value: latestResults.realistic_score, color: interestColors.realistic },
+      { name: "Investigative", value: latestResults.investigative_score, color: interestColors.investigative },
+      { name: "Artistic", value: latestResults.artistic_score, color: interestColors.artistic },
+      { name: "Social", value: latestResults.social_score, color: interestColors.social },
+      { name: "Enterprising", value: latestResults.enterprising_score, color: interestColors.enterprising },
+      { name: "Conventional", value: latestResults.conventional_score, color: interestColors.conventional },
+    ].filter((item) => item.value > 0)
   }
 
   if (isLoading) {
@@ -140,19 +176,22 @@ export default function DashboardPage() {
               <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
                 <Brain className="w-5 h-5 text-white" />
               </div>
-              <span className="text-xl font-bold text-white">CareerPath</span>
+              <span className="text-xl font-bold text-white">NextStep</span>
             </Link>
             <div className="flex items-center space-x-4">
               <Avatar className="w-10 h-10">
-                <AvatarImage src="/placeholder.svg" />
+                <AvatarImage src={profile?.avatar_url || "/placeholder.svg"} />
                 <AvatarFallback className="bg-gradient-to-r from-blue-500 to-purple-600 text-white">
-                  {profile?.full_name?.charAt(0) || user?.email?.charAt(0) || "U"}
+                  {profile?.full_name ? getInitials(profile.full_name) : user?.email?.charAt(0) || "U"}
                 </AvatarFallback>
               </Avatar>
               <Button
                 variant="outline"
                 size="sm"
-                onClick={handleSignOut}
+                onClick={async () => {
+                  await supabase.auth.signOut()
+                  router.push("/")
+                }}
                 className="bg-white/10 border-white/20 text-white hover:bg-white/20"
               >
                 <LogOut className="w-4 h-4 mr-2" />
@@ -221,18 +260,7 @@ export default function DashboardPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-gray-400 text-sm font-medium">Profile Score</p>
-                  <p className="text-3xl font-bold text-white">
-                    {latestResults
-                      ? Math.round(
-                          (Object.values(latestResults)
-                            .slice(1, 7)
-                            .reduce((a: any, b: any) => a + b, 0) /
-                            120) *
-                            100,
-                        )
-                      : 0}
-                    %
-                  </p>
+                  <p className="text-3xl font-bold text-white">{calculateProfileScore()}%</p>
                 </div>
                 <div className="w-12 h-12 bg-gradient-to-r from-yellow-500 to-orange-500 rounded-full flex items-center justify-center">
                   <Target className="w-6 h-6 text-white" />
@@ -335,52 +363,68 @@ export default function DashboardPage() {
               </Card>
             )}
 
-            {/* Interest Breakdown */}
+            {/* Interest Visualization */}
             {latestResults && (
-              <Card className="bg-white/10 backdrop-blur-lg border-white/20">
-                <CardHeader>
-                  <CardTitle className="text-2xl text-white flex items-center">
-                    <TrendingUp className="w-6 h-6 mr-3" />
-                    Interest Breakdown
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  {[
-                    { name: "Realistic", score: latestResults.realistic_score, color: "from-green-500 to-teal-500" },
-                    {
-                      name: "Investigative",
-                      score: latestResults.investigative_score,
-                      color: "from-blue-500 to-cyan-500",
-                    },
-                    { name: "Artistic", score: latestResults.artistic_score, color: "from-purple-500 to-pink-500" },
-                    { name: "Social", score: latestResults.social_score, color: "from-orange-500 to-red-500" },
-                    {
-                      name: "Enterprising",
-                      score: latestResults.enterprising_score,
-                      color: "from-yellow-500 to-orange-500",
-                    },
-                    {
-                      name: "Conventional",
-                      score: latestResults.conventional_score,
-                      color: "from-gray-500 to-slate-500",
-                    },
-                  ].map((interest) => (
-                    <div key={interest.name} className="space-y-2">
-                      <div className="flex justify-between items-center">
-                        <span className="text-white font-medium">{interest.name}</span>
-                        <span className="text-gray-300">{Math.round((interest.score / 20) * 100)}%</span>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Pie Chart */}
+                <Card className="bg-white/10 backdrop-blur-lg border-white/20">
+                  <CardHeader>
+                    <CardTitle className="text-xl text-white flex items-center">
+                      <PieChart className="w-5 h-5 mr-3" />
+                      Interest Distribution
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <CustomPieChart data={getPieChartData()} height={300} />
+                  </CardContent>
+                </Card>
+
+                {/* Progress Bars */}
+                <Card className="bg-white/10 backdrop-blur-lg border-white/20">
+                  <CardHeader>
+                    <CardTitle className="text-xl text-white flex items-center">
+                      <TrendingUp className="w-5 h-5 mr-3" />
+                      Interest Breakdown
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    {[
+                      { name: "Realistic", score: latestResults.realistic_score, color: "from-green-500 to-teal-500" },
+                      {
+                        name: "Investigative",
+                        score: latestResults.investigative_score,
+                        color: "from-blue-500 to-cyan-500",
+                      },
+                      { name: "Artistic", score: latestResults.artistic_score, color: "from-purple-500 to-pink-500" },
+                      { name: "Social", score: latestResults.social_score, color: "from-orange-500 to-red-500" },
+                      {
+                        name: "Enterprising",
+                        score: latestResults.enterprising_score,
+                        color: "from-yellow-500 to-orange-500",
+                      },
+                      {
+                        name: "Conventional",
+                        score: latestResults.conventional_score,
+                        color: "from-gray-500 to-slate-500",
+                      },
+                    ].map((interest) => (
+                      <div key={interest.name} className="space-y-2">
+                        <div className="flex justify-between items-center">
+                          <span className="text-white font-medium">{interest.name}</span>
+                          <span className="text-gray-300">{Math.round((interest.score / 20) * 100)}%</span>
+                        </div>
+                        <div className="relative">
+                          <Progress value={(interest.score / 20) * 100} className="h-2 bg-white/10" />
+                          <div
+                            className={`absolute top-0 left-0 h-2 bg-gradient-to-r ${interest.color} rounded-full transition-all duration-1000`}
+                            style={{ width: `${(interest.score / 20) * 100}%` }}
+                          />
+                        </div>
                       </div>
-                      <div className="relative">
-                        <Progress value={(interest.score / 20) * 100} className="h-2 bg-white/10" />
-                        <div
-                          className={`absolute top-0 left-0 h-2 bg-gradient-to-r ${interest.color} rounded-full transition-all duration-1000`}
-                          style={{ width: `${(interest.score / 20) * 100}%` }}
-                        />
-                      </div>
-                    </div>
-                  ))}
-                </CardContent>
-              </Card>
+                    ))}
+                  </CardContent>
+                </Card>
+              </div>
             )}
           </div>
 
@@ -396,33 +440,33 @@ export default function DashboardPage() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="text-center">
-                  <Avatar className="w-20 h-20 mx-auto mb-4">
-                    <AvatarImage src="/placeholder.svg" />
+                  <Avatar className="w-16 h-16 mx-auto mb-4">
+                    <AvatarImage src={profile?.avatar_url || "/placeholder.svg"} />
                     <AvatarFallback className="bg-gradient-to-r from-blue-500 to-purple-600 text-white text-2xl">
-                      {profile?.full_name?.charAt(0) || user?.email?.charAt(0) || "U"}
+                      {profile?.full_name ? getInitials(profile.full_name) : user?.email?.charAt(0) || "U"}
                     </AvatarFallback>
                   </Avatar>
                   <h3 className="text-lg font-semibold text-white">{profile?.full_name || "Student"}</h3>
-                  <p className="text-gray-400">{profile?.email || user?.email}</p>
+                  <p className="text-gray-400 text-sm">{profile?.email || user?.email}</p>
                 </div>
 
                 <div className="space-y-3 pt-4 border-t border-white/10">
                   {profile?.grade && (
                     <div className="flex justify-between">
-                      <span className="text-gray-400">Grade:</span>
-                      <span className="text-white">{profile.grade}</span>
+                      <span className="text-gray-400 text-sm">Grade:</span>
+                      <span className="text-white text-sm">{profile.grade}</span>
                     </div>
                   )}
                   {profile?.school && (
                     <div className="flex justify-between">
-                      <span className="text-gray-400">School:</span>
-                      <span className="text-white">{profile.school}</span>
+                      <span className="text-gray-400 text-sm">School:</span>
+                      <span className="text-white text-sm">{profile.school}</span>
                     </div>
                   )}
                   {profile?.city && (
                     <div className="flex justify-between">
-                      <span className="text-gray-400">City:</span>
-                      <span className="text-white">{profile.city}</span>
+                      <span className="text-gray-400 text-sm">City:</span>
+                      <span className="text-white text-sm">{profile.city}</span>
                     </div>
                   )}
                 </div>
