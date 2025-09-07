@@ -93,6 +93,81 @@ export default function QuizResultsPage() {
     return colors[interest] || "from-blue-500 to-purple-500"
   }
 
+  const handleDownloadReport = async () => {
+    if (!results || !user) return
+
+    try {
+      // Create a comprehensive report object
+      const reportData = {
+        user: {
+          name: user.user_metadata?.full_name || user.email,
+          email: user.email,
+        },
+        assessment: {
+          date: new Date(results.created_at).toLocaleDateString(),
+          primaryInterest: results.primary_interest,
+          secondaryInterest: results.secondary_interest,
+          scores: {
+            realistic: results.realistic_score,
+            investigative: results.investigative_score,
+            artistic: results.artistic_score,
+            social: results.social_score,
+            enterprising: results.enterprising_score,
+            conventional: results.conventional_score,
+          },
+          recommendations: {
+            careers: results.recommended_careers,
+            courses: results.recommended_courses,
+          },
+        },
+      }
+
+      // Create and download JSON report (can be enhanced to PDF later)
+      const dataStr = JSON.stringify(reportData, null, 2)
+      const dataUri = "data:application/json;charset=utf-8," + encodeURIComponent(dataStr)
+
+      const exportFileDefaultName = `NextStep_Career_Report_${new Date().toISOString().split("T")[0]}.json`
+
+      const linkElement = document.createElement("a")
+      linkElement.setAttribute("href", dataUri)
+      linkElement.setAttribute("download", exportFileDefaultName)
+      linkElement.click()
+    } catch (error) {
+      console.error("Error downloading report:", error)
+    }
+  }
+
+  const handleShareResults = async () => {
+    if (!results) return
+
+    const shareData = {
+      title: "My NextStep Career Assessment Results",
+      text: `I discovered my primary career interest is ${results.primary_interest.charAt(0).toUpperCase() + results.primary_interest.slice(1)}! Check out NextStep for your career guidance.`,
+      url: window.location.origin,
+    }
+
+    try {
+      if (navigator.share) {
+        await navigator.share(shareData)
+      } else {
+        // Fallback: copy to clipboard
+        const shareText = `${shareData.text}\n\nTake your assessment at: ${shareData.url}`
+        await navigator.clipboard.writeText(shareText)
+        alert("Results copied to clipboard!")
+      }
+    } catch (error) {
+      console.error("Error sharing results:", error)
+      // Fallback: copy to clipboard
+      try {
+        const shareText = `My NextStep Career Assessment Results\n\nPrimary Interest: ${results.primary_interest.charAt(0).toUpperCase() + results.primary_interest.slice(1)}\n\nTake your assessment at: ${window.location.origin}`
+        await navigator.clipboard.writeText(shareText)
+        alert("Results copied to clipboard!")
+      } catch (clipboardError) {
+        console.error("Clipboard error:", clipboardError)
+      }
+    }
+  }
+
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
@@ -258,21 +333,37 @@ export default function QuizResultsPage() {
             >
               View Dashboard
             </Button>
-            <Button size="lg" variant="outline" className="bg-white/10 border-white/20 text-white hover:bg-white/20">
+            <Button
+              size="lg"
+              variant="outline"
+              className="bg-white/10 border-white/20 text-white hover:bg-white/20"
+              onClick={handleDownloadReport}
+            >
               <Download className="w-5 h-5 mr-2" />
               Download Report
             </Button>
-            <Button size="lg" variant="outline" className="bg-white/10 border-white/20 text-white hover:bg-white/20">
+            <Button
+              size="lg"
+              variant="outline"
+              className="bg-white/10 border-white/20 text-white hover:bg-white/20"
+              onClick={handleShareResults}
+            >
               <Share2 className="w-5 h-5 mr-2" />
               Share Results
             </Button>
           </div>
-          <p className="text-gray-400 text-sm">
-            Want to retake the quiz?{" "}
-            <button onClick={() => router.push("/quiz")} className="text-blue-400 hover:text-blue-300 underline">
-              Click here
+          <div className="flex flex-col sm:flex-row gap-2 justify-center items-center text-gray-400 text-sm">
+            <span>
+              Want to retake the quiz?{" "}
+              <button onClick={() => router.push("/quiz")} className="text-blue-400 hover:text-blue-300 underline">
+                Click here
+              </button>
+            </span>
+            <span className="hidden sm:inline">•</span>
+            <button onClick={() => router.push("/quiz/review")} className="text-blue-400 hover:text-blue-300 underline">
+              Review previous answers
             </button>
-          </p>
+          </div>
         </div>
       </div>
     </div>
