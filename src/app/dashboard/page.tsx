@@ -169,7 +169,7 @@ export default function DashboardPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
       {/* Navigation */}
-      <nav className="border-b border-white/10 bg-white/5 backdrop-blur-lg">
+      {/* <nav className="border-b border-white/10 bg-white/5 backdrop-blur-lg">
         <div className="max-w-7xl mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <Link href="/" className="flex items-center space-x-2">
@@ -200,7 +200,7 @@ export default function DashboardPage() {
             </div>
           </div>
         </div>
-      </nav>
+      </nav> */}
 
       <div className="max-w-7xl mx-auto px-6 py-8">
         {/* Welcome Section */}
