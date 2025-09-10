@@ -74,7 +74,7 @@ export default function ContactPage() {
       <div className="px-6 lg:px-12 pb-20">
         {/* Hero Section */}
         <section className="max-w-4xl mx-auto pt-20 pb-16 text-center">
-          <h1 className="text-5xl lg:text-6xl font-bold text-white mb-6 leading-tight">
+          <h1 className="text-5xl lg:text-6xl md:inline-flex gap-3 font-bold text-white mb-6 leading-tight">
             Get In
             <span className="block bg-gradient-to-r from-blue-400 via-purple-400 to-cyan-400 bg-clip-text text-transparent">
               Touch
