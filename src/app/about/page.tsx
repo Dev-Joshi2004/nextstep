@@ -15,28 +15,6 @@ export default function AboutPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
-      {/* Navigation */}
-      <nav className="relative z-50 flex items-center justify-between p-6 lg:px-12">
-        <Link href="/" className="flex items-center space-x-2">
-          <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl flex items-center justify-center">
-            <Brain className="w-6 h-6 text-white" />
-          </div>
-          <span className="text-2xl font-bold text-white">CareerPath</span>
-        </Link>
-        <div className="hidden md:flex items-center space-x-8">
-          <Link href="/" className="text-gray-300 hover:text-white transition-colors">
-            Home
-          </Link>
-          <Link href="/contact" className="text-gray-300 hover:text-white transition-colors">
-            Contact
-          </Link>
-          <Link href="/auth/login">
-            <Button variant="outline" className="border-white/20 text-white hover:bg-white/10 bg-transparent">
-              Sign In
-            </Button>
-          </Link>
-        </div>
-      </nav>
 
       <div className="px-6 lg:px-12 pb-20">
         {/* Hero Section */}
@@ -48,7 +26,7 @@ export default function AboutPage() {
           >
             <div className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-blue-500/20 to-purple-500/20 rounded-full border border-white/10 mb-8">
               <Star className="w-4 h-4 text-yellow-400 mr-2" />
-              <span className="text-sm text-gray-300">Empowering Students Since 2024</span>
+              <span className="text-sm text-gray-300">Empowering Students</span>
             </div>
 
             <h1 className="text-5xl lg:text-7xl font-bold text-white mb-6 leading-tight">
