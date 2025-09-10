@@ -22,7 +22,7 @@ export default function NotFoundPage() {
       </div>
 
       {/* Navigation */}
-      <nav className="relative z-50 flex items-center justify-between p-6 lg:px-12">
+      {/* <nav className="relative z-50 flex items-center justify-between p-6 lg:px-12">
         <Link href="/" className="flex items-center space-x-2">
           <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl flex items-center justify-center">
             <Brain className="w-6 h-6 text-white" />
@@ -45,7 +45,7 @@ export default function NotFoundPage() {
             </Button>
           </Link>
         </div>
-      </nav>
+      </nav> */}
 
       {/* 404 Content */}
       <div className="relative z-10 flex items-center justify-center min-h-[80vh] px-6 lg:px-12">
