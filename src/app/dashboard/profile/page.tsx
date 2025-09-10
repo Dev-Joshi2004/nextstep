@@ -237,11 +237,10 @@ export default function ProfilePage() {
 
               {message && (
                 <div
-                  className={`p-4 rounded-lg ${
-                    message.type === "success"
+                  className={`p-4 rounded-lg ${message.type === "success"
                       ? "bg-green-500/20 border border-green-500/30 text-green-300"
                       : "bg-red-500/20 border border-red-500/30 text-red-300"
-                  }`}
+                    }`}
                 >
                   {message.text}
                 </div>
