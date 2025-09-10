@@ -1,14 +1,17 @@
+// app/dashboard/page.tsx
 "use client"
 
 import { useEffect, useState } from "react"
+import Link from "next/link"
+import { useRouter } from "next/navigation"
+import { createClient } from "@/lib/supabase/client"
+import Loader from "@/components/loader"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { CustomPieChart } from "@/components/ui/pie-chart"
-import { createClient } from "@/lib/supabase/client"
-import { useRouter } from "next/navigation"
 import {
   Brain,
   BookOpen,
@@ -25,12 +28,21 @@ import {
   PieChart,
   LogOut,
 } from "lucide-react"
-import Link from "next/link"
 
-interface Profile {
+type QuizResult = {
   id: string
-  full_name: string
-  email: string
+  user_id?: string
+  quiz_answers?: any
+  riasec_scores?: Record<string, number>
+  skill_scores?: Record<string, number>
+  recommendations?: any[]
+  created_at?: string
+}
+
+type Profile = {
+  id: string
+  full_name?: string
+  email?: string
   phone?: string
   grade?: string
   school?: string
@@ -39,32 +51,17 @@ interface Profile {
   avatar_url?: string
 }
 
-interface CareerRecommendation {
-  id: string
-  realistic_score: number
-  investigative_score: number
-  artistic_score: number
-  social_score: number
-  enterprising_score: number
-  conventional_score: number
-  primary_interest: string
-  secondary_interest: string
-  recommended_careers: string[]
-  recommended_courses: string[]
-  created_at: string
-}
-
 export default function DashboardPage() {
   const [user, setUser] = useState<any>(null)
   const [profile, setProfile] = useState<Profile | null>(null)
-  const [latestResults, setLatestResults] = useState<CareerRecommendation | null>(null)
-  const [quizCount, setQuizCount] = useState(0)
+  const [latestResult, setLatestResult] = useState<QuizResult | null>(null)
+  const [quizCount, setQuizCount] = useState<number>(0)
   const [isLoading, setIsLoading] = useState(true)
   const router = useRouter()
   const supabase = createClient()
 
   useEffect(() => {
-    const fetchDashboardData = async () => {
+    const fetchDashboard = async () => {
       try {
         const {
           data: { user },
@@ -75,135 +72,70 @@ export default function DashboardPage() {
         }
         setUser(user)
 
-        // Fetch profile
         const { data: profileData } = await supabase.from("profiles").select("*").eq("id", user.id).single()
-        setProfile(profileData)
+        setProfile(profileData || null)
 
-        // Fetch latest career recommendation
-        const { data: careerData } = await supabase
-          .from("career_recommendations")
+        // Get latest quiz_results for this user
+        const { data: quizRows } = await supabase
+          .from("quiz_results")
           .select("*")
           .eq("user_id", user.id)
           .order("created_at", { ascending: false })
           .limit(1)
-          .single()
-        setLatestResults(careerData)
 
-        // Count total quizzes taken
-        const { count } = await supabase
-          .from("career_recommendations")
-          .select("*", { count: "exact", head: true })
-          .eq("user_id", user.id)
+        setLatestResult((quizRows && quizRows[0]) || null)
+
+        // Count total quiz attempts
+        const { count } = await supabase.from("quiz_results").select("*", { count: "exact", head: true }).eq("user_id", user.id)
         setQuizCount(count || 0)
-      } catch (error) {
-        console.error("Error fetching dashboard data:", error)
+      } catch (err) {
+        console.error("Dashboard fetch error:", err)
       } finally {
         setIsLoading(false)
       }
     }
 
-    fetchDashboardData()
-  }, [supabase, router])
+    fetchDashboard()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
-  const getInterestColor = (interest: string): string => {
-    const colors: Record<string, string> = {
-      realistic: "from-green-500 to-teal-500",
-      investigative: "from-blue-500 to-cyan-500",
-      artistic: "from-purple-500 to-pink-500",
-      social: "from-orange-500 to-red-500",
-      enterprising: "from-yellow-500 to-orange-500",
-      conventional: "from-gray-500 to-slate-500",
-    }
-    return colors[interest] || "from-blue-500 to-purple-500"
-  }
-
-  const getInitials = (name: string) => {
-    return name
+  const getInitials = (name = "") =>
+    name
       .split(" ")
-      .map((word) => word.charAt(0))
+      .map((w) => w.charAt(0))
       .join("")
       .toUpperCase()
       .slice(0, 2)
-  }
 
   const calculateProfileScore = () => {
     if (!profile) return 0
     const fields = [profile.full_name, profile.phone, profile.grade, profile.school, profile.city, profile.state]
-    const completedFields = fields.filter((field) => field && field.trim() !== "").length
-    return Math.round((completedFields / fields.length) * 100)
+    const completed = fields.filter((f) => f && (f as string).trim() !== "").length
+    return Math.round((completed / fields.length) * 100)
   }
 
   const getPieChartData = () => {
-    if (!latestResults) return []
-
-    const interestColors = {
-      realistic: "#10b981",
-      investigative: "#3b82f6",
-      artistic: "#8b5cf6",
-      social: "#f97316",
-      enterprising: "#eab308",
-      conventional: "#6b7280",
-    }
-
+    if (!latestResult?.riasec_scores) return []
+    const s = latestResult.riasec_scores
     return [
-      { name: "Realistic", value: latestResults.realistic_score, color: interestColors.realistic },
-      { name: "Investigative", value: latestResults.investigative_score, color: interestColors.investigative },
-      { name: "Artistic", value: latestResults.artistic_score, color: interestColors.artistic },
-      { name: "Social", value: latestResults.social_score, color: interestColors.social },
-      { name: "Enterprising", value: latestResults.enterprising_score, color: interestColors.enterprising },
-      { name: "Conventional", value: latestResults.conventional_score, color: interestColors.conventional },
-    ].filter((item) => item.value > 0)
+      { name: "Realistic", value: s.R ?? 0, color: "#10b981" },
+      { name: "Investigative", value: s.I ?? 0, color: "#3b82f6" },
+      { name: "Artistic", value: s.A ?? 0, color: "#8b5cf6" },
+      { name: "Social", value: s.S ?? 0, color: "#f97316" },
+      { name: "Enterprising", value: s.E ?? 0, color: "#eab308" },
+      { name: "Conventional", value: s.C ?? 0, color: "#6b7280" },
+    ].filter((i) => i.value > 0)
   }
 
   if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
-        <div className="text-white text-center">
-          <Brain className="w-16 h-16 mx-auto mb-4 animate-pulse" />
-          <p className="text-xl">Loading your dashboard...</p>
-        </div>
-      </div>
-    )
+    return <Loader page="Dashboard" text="Cooking your career snapshot — 2 minut Sabar Rakh Laadle..." />
   }
+
+  const recommendations = Array.isArray(latestResult?.recommendations) ? latestResult!.recommendations : []
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
-      {/* Navigation */}
-      {/* <nav className="border-b border-white/10 bg-white/5 backdrop-blur-lg">
-        <div className="max-w-7xl mx-auto px-6 py-4">
-          <div className="flex items-center justify-between">
-            <Link href="/" className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
-                <Brain className="w-5 h-5 text-white" />
-              </div>
-              <span className="text-xl font-bold text-white">NextStep</span>
-            </Link>
-            <div className="flex items-center space-x-4">
-              <Avatar className="w-10 h-10">
-                <AvatarImage src={profile?.avatar_url || "/placeholder.svg"} />
-                <AvatarFallback className="bg-gradient-to-r from-blue-500 to-purple-600 text-white">
-                  {profile?.full_name ? getInitials(profile.full_name) : user?.email?.charAt(0) || "U"}
-                </AvatarFallback>
-              </Avatar>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={async () => {
-                  await supabase.auth.signOut()
-                  router.push("/")
-                }}
-                className="bg-white/10 border-white/20 text-white hover:bg-white/20"
-              >
-                <LogOut className="w-4 h-4 mr-2" />
-                Sign Out
-              </Button>
-            </div>
-          </div>
-        </div>
-      </nav> */}
-
       <div className="max-w-7xl mx-auto px-6 py-8">
-        {/* Welcome Section */}
         <div className="mb-8">
           <h1 className="text-4xl font-bold text-white mb-2">
             Welcome back, {profile?.full_name || user?.email?.split("@")[0] || "Student"}!
@@ -211,9 +143,8 @@ export default function DashboardPage() {
           <p className="text-xl text-gray-300">Here's your career journey overview</p>
         </div>
 
-        {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <Card className="bg-white/10 backdrop-blur-lg border-white/20 hover:bg-white/15 transition-all duration-300 transform hover:scale-105">
+          <Card className="bg-white/10 backdrop-blur-lg border-white/20">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
@@ -227,12 +158,12 @@ export default function DashboardPage() {
             </CardContent>
           </Card>
 
-          <Card className="bg-white/10 backdrop-blur-lg border-white/20 hover:bg-white/15 transition-all duration-300 transform hover:scale-105">
+          <Card className="bg-white/10 backdrop-blur-lg border-white/20">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-gray-400 text-sm font-medium">Career Matches</p>
-                  <p className="text-3xl font-bold text-white">{latestResults?.recommended_careers?.length || 0}</p>
+                  <p className="text-3xl font-bold text-white">{recommendations.length}</p>
                 </div>
                 <div className="w-12 h-12 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center">
                   <Briefcase className="w-6 h-6 text-white" />
@@ -241,12 +172,17 @@ export default function DashboardPage() {
             </CardContent>
           </Card>
 
-          <Card className="bg-white/10 backdrop-blur-lg border-white/20 hover:bg-white/15 transition-all duration-300 transform hover:scale-105">
+          <Card className="bg-white/10 backdrop-blur-lg border-white/20">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-gray-400 text-sm font-medium">Course Options</p>
-                  <p className="text-3xl font-bold text-white">{latestResults?.recommended_courses?.length || 0}</p>
+                  <p className="text-3xl font-bold text-white">
+                    {/* try to count unique "Minimum Education" as courses placeholder */}
+                    {[
+                      ...new Set(recommendations.map((r: any) => r["Minimum Education"]).filter(Boolean)),
+                    ].length || 0}
+                  </p>
                 </div>
                 <div className="w-12 h-12 bg-gradient-to-r from-green-500 to-teal-500 rounded-full flex items-center justify-center">
                   <BookOpen className="w-6 h-6 text-white" />
@@ -255,7 +191,7 @@ export default function DashboardPage() {
             </CardContent>
           </Card>
 
-          <Card className="bg-white/10 backdrop-blur-lg border-white/20 hover:bg-white/15 transition-all duration-300 transform hover:scale-105">
+          <Card className="bg-white/10 backdrop-blur-lg border-white/20">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
@@ -270,12 +206,9 @@ export default function DashboardPage() {
           </Card>
         </div>
 
-        {/* Main Content Grid */}
         <div className="grid lg:grid-cols-3 gap-8">
-          {/* Left Column */}
           <div className="lg:col-span-2 space-y-8">
-            {/* Career Profile */}
-            {latestResults ? (
+            {latestResult ? (
               <Card className="bg-white/10 backdrop-blur-lg border-white/20">
                 <CardHeader>
                   <CardTitle className="text-2xl text-white flex items-center">
@@ -286,18 +219,13 @@ export default function DashboardPage() {
                 <CardContent className="space-y-6">
                   <div className="text-center">
                     <div
-                      className={`inline-flex items-center justify-center w-20 h-20 bg-gradient-to-r ${getInterestColor(
-                        latestResults.primary_interest,
-                      )} rounded-full mb-4`}
+                      className={`inline-flex items-center justify-center w-20 h-20 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full mb-4`}
                     >
                       <Brain className="w-10 h-10 text-white" />
                     </div>
-                    <h3 className="text-2xl font-bold text-white capitalize mb-2">{latestResults.primary_interest}</h3>
-                    <Badge
-                      variant="secondary"
-                      className="bg-white/10 text-white border-white/20 hover:bg-white/20 capitalize"
-                    >
-                      Secondary: {latestResults.secondary_interest}
+                    <h3 className="text-2xl font-bold text-white mb-2">Latest Results</h3>
+                    <Badge variant="secondary" className="bg-white/10 text-white border-white/20">
+                      {new Date(latestResult.created_at || "").toLocaleDateString() || "—"}
                     </Badge>
                   </div>
 
@@ -308,23 +236,27 @@ export default function DashboardPage() {
                         Top Career Matches
                       </h4>
                       <div className="space-y-2">
-                        {latestResults.recommended_careers.slice(0, 3).map((career, index) => (
+                        {recommendations.slice(0, 3).map((rec: any, index: number) => (
                           <div key={index} className="p-3 bg-white/5 rounded-lg border border-white/10">
-                            <p className="text-white font-medium">{career}</p>
+                            <p className="text-white font-medium">{rec["Job Title"]}</p>
+                            <p className="text-gray-400 text-sm">{rec.Description}</p>
                           </div>
                         ))}
+                        {recommendations.length === 0 && <div className="text-gray-400">No recommendations yet.</div>}
                       </div>
                     </div>
 
                     <div>
                       <h4 className="text-lg font-semibold text-white mb-3 flex items-center">
                         <BookOpen className="w-5 h-5 mr-2" />
-                        Recommended Courses
+                        Courses / Education
                       </h4>
                       <div className="space-y-2">
-                        {latestResults.recommended_courses.slice(0, 3).map((course, index) => (
+                        {[
+                          ...new Set(recommendations.map((r: any) => r["Minimum Education"]).filter(Boolean)),
+                        ].slice(0, 3).map((edu: string, index: number) => (
                           <div key={index} className="p-3 bg-white/5 rounded-lg border border-white/10">
-                            <p className="text-white font-medium">{course}</p>
+                            <p className="text-white font-medium">{edu}</p>
                           </div>
                         ))}
                       </div>
@@ -333,7 +265,7 @@ export default function DashboardPage() {
 
                   <div className="flex justify-center">
                     <Link href="/quiz/results">
-                      <Button className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700">
+                      <Button className="bg-gradient-to-r from-blue-600 to-purple-600">
                         View Detailed Results
                         <ArrowRight className="w-4 h-4 ml-2" />
                       </Button>
@@ -346,27 +278,18 @@ export default function DashboardPage() {
                 <CardContent className="text-center py-12">
                   <Brain className="w-16 h-16 mx-auto mb-4 text-gray-400" />
                   <h3 className="text-2xl font-bold text-white mb-4">Take Your First Assessment</h3>
-                  <p className="text-gray-300 mb-6 max-w-md mx-auto">
-                    Discover your career interests and get personalized recommendations by taking our comprehensive
-                    assessment.
-                  </p>
+                  <p className="text-gray-300 mb-6">Discover your career interests and get personalised recommendations.</p>
                   <Link href="/quiz">
-                    <Button
-                      size="lg"
-                      className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
-                    >
+                    <Button size="lg" className="bg-gradient-to-r from-blue-600 to-purple-600">
                       Start Assessment
-                      <ArrowRight className="w-5 h-5 ml-2" />
                     </Button>
                   </Link>
                 </CardContent>
               </Card>
             )}
 
-            {/* Interest Visualization */}
-            {latestResults && (
+            {latestResult && (
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* Pie Chart */}
                 <Card className="bg-white/10 backdrop-blur-lg border-white/20">
                   <CardHeader>
                     <CardTitle className="text-xl text-white flex items-center">
@@ -379,7 +302,6 @@ export default function DashboardPage() {
                   </CardContent>
                 </Card>
 
-                {/* Progress Bars */}
                 <Card className="bg-white/10 backdrop-blur-lg border-white/20">
                   <CardHeader>
                     <CardTitle className="text-xl text-white flex items-center">
@@ -389,48 +311,32 @@ export default function DashboardPage() {
                   </CardHeader>
                   <CardContent className="space-y-4">
                     {[
-                      { name: "Realistic", score: latestResults.realistic_score, color: "from-green-500 to-teal-500" },
-                      {
-                        name: "Investigative",
-                        score: latestResults.investigative_score,
-                        color: "from-blue-500 to-cyan-500",
-                      },
-                      { name: "Artistic", score: latestResults.artistic_score, color: "from-purple-500 to-pink-500" },
-                      { name: "Social", score: latestResults.social_score, color: "from-orange-500 to-red-500" },
-                      {
-                        name: "Enterprising",
-                        score: latestResults.enterprising_score,
-                        color: "from-yellow-500 to-orange-500",
-                      },
-                      {
-                        name: "Conventional",
-                        score: latestResults.conventional_score,
-                        color: "from-gray-500 to-slate-500",
-                      },
-                    ].map((interest) => (
-                      <div key={interest.name} className="space-y-2">
-                        <div className="flex justify-between items-center">
-                          <span className="text-white font-medium">{interest.name}</span>
-                          <span className="text-gray-300">{Math.round((interest.score / 20) * 100)}%</span>
+                      { name: "Realistic", key: "R" },
+                      { name: "Investigative", key: "I" },
+                      { name: "Artistic", key: "A" },
+                      { name: "Social", key: "S" },
+                      { name: "Enterprising", key: "E" },
+                      { name: "Conventional", key: "C" },
+                    ].map((item) => {
+                      const score = latestResult.riasec_scores?.[item.key] ?? 0
+                      const percent = Math.round(score * 100)
+                      return (
+                        <div key={item.key} className="space-y-2">
+                          <div className="flex justify-between items-center">
+                            <span className="text-white font-medium">{item.name}</span>
+                            <span className="text-gray-300">{percent}%</span>
+                          </div>
+                          <Progress value={percent} className="h-2 bg-white/10" />
                         </div>
-                        <div className="relative">
-                          <Progress value={(interest.score / 20) * 100} className="h-2 bg-white/10" />
-                          <div
-                            className={`absolute top-0 left-0 h-2 bg-gradient-to-r ${interest.color} rounded-full transition-all duration-1000`}
-                            style={{ width: `${(interest.score / 20) * 100}%` }}
-                          />
-                        </div>
-                      </div>
-                    ))}
+                      )
+                    })}
                   </CardContent>
                 </Card>
               </div>
             )}
           </div>
 
-          {/* Right Column */}
           <div className="space-y-8">
-            {/* Profile Card */}
             <Card className="bg-white/10 backdrop-blur-lg border-white/20">
               <CardHeader>
                 <CardTitle className="text-xl text-white flex items-center">
@@ -480,37 +386,25 @@ export default function DashboardPage() {
               </CardContent>
             </Card>
 
-            {/* Quick Actions */}
             <Card className="bg-white/10 backdrop-blur-lg border-white/20">
               <CardHeader>
                 <CardTitle className="text-xl text-white">Quick Actions</CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
                 <Link href="/quiz">
-                  <Button
-                    variant="outline"
-                    className="w-full bg-white/10 border-white/20 text-white hover:bg-white/20 justify-start"
-                  >
+                  <Button variant="outline" className="w-full bg-white/10 border-white/20 text-white justify-start">
                     <Brain className="w-4 h-4 mr-3" />
-                    {latestResults ? "Retake Assessment" : "Take Assessment"}
+                    Take / Retake Assessment
                   </Button>
                 </Link>
-                {latestResults && (
-                  <Link href="/quiz/results">
-                    <Button
-                      variant="outline"
-                      className="w-full bg-white/10 border-white/20 text-white hover:bg-white/20 justify-start"
-                    >
-                      <Star className="w-4 h-4 mr-3" />
-                      View Results
-                    </Button>
-                  </Link>
-                )}
+                <Link href="/quiz/results">
+                  <Button variant="outline" className="w-full bg-white/10 border-white/20 text-white justify-start">
+                    <Star className="w-4 h-4 mr-3" />
+                    View Results
+                  </Button>
+                </Link>
                 <Link href="/contact">
-                  <Button
-                    variant="outline"
-                    className="w-full bg-white/10 border-white/20 text-white hover:bg-white/20 justify-start"
-                  >
+                  <Button variant="outline" className="w-full bg-white/10 border-white/20 text-white justify-start">
                     <User className="w-4 h-4 mr-3" />
                     Get Counseling
                   </Button>
@@ -518,7 +412,6 @@ export default function DashboardPage() {
               </CardContent>
             </Card>
 
-            {/* Recent Activity */}
             <Card className="bg-white/10 backdrop-blur-lg border-white/20">
               <CardHeader>
                 <CardTitle className="text-xl text-white flex items-center">
@@ -527,24 +420,20 @@ export default function DashboardPage() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                {latestResults ? (
+                {latestResult ? (
                   <div className="space-y-3">
                     <div className="flex items-center space-x-3">
                       <div className="w-2 h-2 bg-green-500 rounded-full" />
                       <div>
                         <p className="text-white text-sm">Completed career assessment</p>
-                        <p className="text-gray-400 text-xs">
-                          {new Date(latestResults.created_at).toLocaleDateString()}
-                        </p>
+                        <p className="text-gray-400 text-xs">{new Date(latestResult.created_at || "").toLocaleString()}</p>
                       </div>
                     </div>
                     <div className="flex items-center space-x-3">
                       <div className="w-2 h-2 bg-blue-500 rounded-full" />
                       <div>
                         <p className="text-white text-sm">Received career recommendations</p>
-                        <p className="text-gray-400 text-xs">
-                          {new Date(latestResults.created_at).toLocaleDateString()}
-                        </p>
+                        <p className="text-gray-400 text-xs">{new Date(latestResult.created_at || "").toLocaleDateString()}</p>
                       </div>
                     </div>
                   </div>
