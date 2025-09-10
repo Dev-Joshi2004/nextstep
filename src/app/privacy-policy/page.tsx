@@ -7,7 +7,7 @@ export default function PrivacyPolicyPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
       {/* Navigation */}
-      <nav className="relative z-50 flex items-center justify-between p-6 lg:px-12">
+      {/* <nav className="relative z-50 flex items-center justify-between p-6 lg:px-12">
         <Link href="/" className="flex items-center space-x-2">
           <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl flex items-center justify-center">
             <Brain className="w-6 h-6 text-white" />
@@ -30,12 +30,12 @@ export default function PrivacyPolicyPage() {
             </Button>
           </Link>
         </div>
-      </nav>
+      </nav> */}
 
       <div className="px-6 lg:px-12 pb-20">
         {/* Hero Section */}
         <section className="max-w-4xl mx-auto pt-20 pb-16 text-center">
-          <h1 className="text-5xl lg:text-6xl font-bold text-white mb-6 leading-tight">
+          <h1 className="text-5xl lg:text-6xl md:inline-flex gap-3 font-bold text-white mb-6 leading-tight">
             Privacy
             <span className="block bg-gradient-to-r from-blue-400 via-purple-400 to-cyan-400 bg-clip-text text-transparent">
               Policy
@@ -45,7 +45,7 @@ export default function PrivacyPolicyPage() {
             Your privacy is important to us. This policy explains how we collect, use, and protect your personal
             information.
           </p>
-          <p className="text-gray-400">Last updated: December 2024</p>
+          <p className="text-gray-400">Last updated: September 2025</p>
         </section>
 
         {/* Privacy Policy Content */}
