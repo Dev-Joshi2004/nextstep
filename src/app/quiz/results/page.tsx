@@ -1,3 +1,4 @@
+// app/quiz/results/page.tsx
 "use client"
 
 import { useEffect, useState } from "react"
@@ -5,33 +6,41 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
 import { createClient } from "@/lib/supabase/client"
+import Loader from "@/components/loader"
+import { Award, Brain, Zap, BookOpen, Share2, Clock, RefreshCw, Star, ArrowRight, Users } from "lucide-react"
 import { useRouter } from "next/navigation"
-import { Brain, BookOpen, Briefcase, Star, Download, Share2 } from "lucide-react"
 
-interface CareerRecommendation {
-  id: string
-  realistic_score: number
-  investigative_score: number
-  artistic_score: number
-  social_score: number
-  enterprising_score: number
-  conventional_score: number
-  primary_interest: string
-  secondary_interest: string
-  recommended_careers: string[]
-  recommended_courses: string[]
-  created_at: string
+type MLRecommendation = {
+  "Job Title": string
+  Description: string
+  Similarity: number
+  "Top 3 Skills": string[]
+  "Minimum Education": string
+  Priority: "High" | "Low"
 }
 
-export default function QuizResultsPage() {
-  const [results, setResults] = useState<CareerRecommendation | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
-  const [user, setUser] = useState<any>(null)
-  const router = useRouter()
+type QuizResultRow = {
+  id: string
+  user_id?: string
+  quiz_answers?: any
+  riasec_scores?: Record<string, number>
+  skill_scores?: Record<string, number>
+  recommendations?: MLRecommendation[]
+  created_at?: string
+}
+
+export default function ResultsPage() {
+  const [loading, setLoading] = useState(true)
+  const [results, setResults] = useState<QuizResultRow | null>(null)
+  const [history, setHistory] = useState<QuizResultRow[]>([])
+  const [retrying, setRetrying] = useState(false)
+  const [selectedId, setSelectedId] = useState<string | null>(null)
   const supabase = createClient()
+  const router = useRouter()
 
   useEffect(() => {
-    const fetchResults = async () => {
+    const load = async () => {
+      setLoading(true)
       try {
         const {
           data: { user },
@@ -40,329 +49,196 @@ export default function QuizResultsPage() {
           router.push("/auth/login")
           return
         }
-        setUser(user)
 
-        // Fetch the latest career recommendation
-        const { data, error } = await supabase
-          .from("career_recommendations")
+        const { data: rows, error } = await supabase
+          .from("quiz_results")
           .select("*")
           .eq("user_id", user.id)
           .order("created_at", { ascending: false })
-          .limit(1)
-          .single()
 
         if (error) {
           console.error("Error fetching results:", error)
-          router.push("/quiz")
+          setResults(null)
+          setHistory([])
+          setLoading(false)
           return
         }
 
-        setResults(data)
-      } catch (error) {
-        console.error("Error:", error)
-        router.push("/quiz")
+        const typedRows = (rows || []) as QuizResultRow[]
+        setHistory(typedRows)
+        const latest = typedRows.length > 0 ? typedRows[0] : null
+        setResults(latest)
+        setSelectedId(latest?.id ?? null)
+      } catch (err) {
+        console.error("Results load error:", err)
       } finally {
-        setIsLoading(false)
+        setLoading(false)
       }
     }
 
-    fetchResults()
-  }, [supabase, router])
+    load()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
-  const getInterestDescription = (interest: string): string => {
-    const descriptions: Record<string, string> = {
-      realistic: "You enjoy hands-on work, building things, and practical problem-solving.",
-      investigative: "You love analyzing data, conducting research, and solving complex problems.",
-      artistic: "You thrive on creativity, innovation, and expressing yourself through various mediums.",
-      social: "You're passionate about helping others, working in teams, and making a positive impact.",
-      enterprising: "You excel at leadership, business ventures, and taking calculated risks.",
-      conventional: "You prefer organized work, attention to detail, and systematic approaches.",
-    }
-    return descriptions[interest] || ""
+  const onSelect = (id: string) => {
+    setSelectedId(id)
+    const row = history.find((r) => r.id === id) || null
+    setResults(row)
+    window.scrollTo({ top: 0, behavior: "smooth" })
   }
 
-  const getInterestColor = (interest: string): string => {
-    const colors: Record<string, string> = {
-      realistic: "from-green-500 to-teal-500",
-      investigative: "from-blue-500 to-cyan-500",
-      artistic: "from-purple-500 to-pink-500",
-      social: "from-orange-500 to-red-500",
-      enterprising: "from-yellow-500 to-orange-500",
-      conventional: "from-gray-500 to-slate-500",
-    }
-    return colors[interest] || "from-blue-500 to-purple-500"
-  }
-
-  const handleDownloadReport = async () => {
-    if (!results || !user) return
-
-    try {
-      // Create a comprehensive report object
-      const reportData = {
-        user: {
-          name: user.user_metadata?.full_name || user.email,
-          email: user.email,
-        },
-        assessment: {
-          date: new Date(results.created_at).toLocaleDateString(),
-          primaryInterest: results.primary_interest,
-          secondaryInterest: results.secondary_interest,
-          scores: {
-            realistic: results.realistic_score,
-            investigative: results.investigative_score,
-            artistic: results.artistic_score,
-            social: results.social_score,
-            enterprising: results.enterprising_score,
-            conventional: results.conventional_score,
-          },
-          recommendations: {
-            careers: results.recommended_careers,
-            courses: results.recommended_courses,
-          },
-        },
-      }
-
-      // Create and download JSON report (can be enhanced to PDF later)
-      const dataStr = JSON.stringify(reportData, null, 2)
-      const dataUri = "data:application/json;charset=utf-8," + encodeURIComponent(dataStr)
-
-      const exportFileDefaultName = `NextStep_Career_Report_${new Date().toISOString().split("T")[0]}.json`
-
-      const linkElement = document.createElement("a")
-      linkElement.setAttribute("href", dataUri)
-      linkElement.setAttribute("download", exportFileDefaultName)
-      linkElement.click()
-    } catch (error) {
-      console.error("Error downloading report:", error)
-    }
-  }
-
-  const handleShareResults = async () => {
-    if (!results) return
-
-    const shareData = {
-      title: "My NextStep Career Assessment Results",
-      text: `I discovered my primary career interest is ${results.primary_interest.charAt(0).toUpperCase() + results.primary_interest.slice(1)}! Check out NextStep for your career guidance.`,
-      url: window.location.origin,
-    }
-
-    try {
-      if (navigator.share) {
-        await navigator.share(shareData)
-      } else {
-        // Fallback: copy to clipboard
-        const shareText = `${shareData.text}\n\nTake your assessment at: ${shareData.url}`
-        await navigator.clipboard.writeText(shareText)
-        alert("Results copied to clipboard!")
-      }
-    } catch (error) {
-      console.error("Error sharing results:", error)
-      // Fallback: copy to clipboard
-      try {
-        const shareText = `My NextStep Career Assessment Results\n\nPrimary Interest: ${results.primary_interest.charAt(0).toUpperCase() + results.primary_interest.slice(1)}\n\nTake your assessment at: ${window.location.origin}`
-        await navigator.clipboard.writeText(shareText)
-        alert("Results copied to clipboard!")
-      } catch (clipboardError) {
-        console.error("Clipboard error:", clipboardError)
-      }
-    }
-  }
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
-        <div className="text-white text-center">
-          <Brain className="w-16 h-16 mx-auto mb-4 animate-pulse" />
-          <p className="text-xl">Loading your results...</p>
-        </div>
-      </div>
-    )
+  if (loading) {
+    return <Loader page="Results" text="Loading your future career possibilities... 🧙‍♀️" />
   }
 
   if (!results) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
-        <Card className="bg-white/10 backdrop-blur-lg border-white/20 p-8">
-          <CardContent className="text-center">
-            <h2 className="text-2xl font-bold text-white mb-4">No Results Found</h2>
-            <p className="text-gray-300 mb-6">Please take the quiz first to see your results.</p>
-            <Button
-              onClick={() => router.push("/quiz")}
-              className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
-            >
-              Take Quiz
-            </Button>
-          </CardContent>
-        </Card>
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 p-4">
+        <div className="max-w-2xl mx-auto pt-8">
+          <Card className="bg-white/10 backdrop-blur-lg border-white/20 text-center">
+            <CardContent className="p-8">
+              <Brain className="w-16 h-16 mx-auto mb-4 text-gray-400" />
+              <h2 className="text-2xl font-bold text-white mb-2">No Results Found</h2>
+              <p className="text-gray-300 mb-4">Take the assessment to generate your personalized recommendations.</p>
+              <Button onClick={() => router.push("/quiz")} className="bg-gradient-to-r from-blue-600 to-purple-600">
+                <Brain className="w-4 h-4 mr-2" /> Take Assessment
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     )
   }
 
-  const totalScore = Object.values({
-    realistic: results.realistic_score,
-    investigative: results.investigative_score,
-    artistic: results.artistic_score,
-    social: results.social_score,
-    enterprising: results.enterprising_score,
-    conventional: results.conventional_score,
-  }).reduce((sum, score) => sum + score, 0)
+  const riasecLabels: Record<string, string> = { R: "Realistic", I: "Investigative", A: "Artistic", S: "Social", E: "Enterprising", C: "Conventional" }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 p-4">
       <div className="max-w-6xl mx-auto pt-8">
-        {/* Header */}
-        <div className="text-center mb-12">
-          <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full mb-6">
-            <Star className="w-10 h-10 text-white" />
+        <div className="text-center mb-8">
+          <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-lg border border-white/20 rounded-full px-4 py-2 mb-4">
+            <Award className="w-4 h-4 text-yellow-400" />
+            <span className="text-sm font-medium text-white">Assessment Complete</span>
           </div>
-          <h1 className="text-5xl font-bold text-white mb-4">Your Career Profile</h1>
-          <p className="text-xl text-gray-300 max-w-2xl mx-auto">
-            Based on your responses, we've identified your career interests and generated personalized recommendations.
+          <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">Your Career Recommendations</h1>
+          <p className="text-gray-300 text-lg max-w-2xl mx-auto">
+            Based on your responses, we've identified {results.recommendations?.length ?? 0} career options.
           </p>
-        </div>
 
-        {/* Primary Interest */}
-        <Card className="bg-white/10 backdrop-blur-lg border-white/20 mb-8">
-          <CardHeader>
-            <CardTitle className="text-3xl text-white text-center">Your Primary Interest</CardTitle>
-          </CardHeader>
-          <CardContent className="text-center">
-            <div
-              className={`inline-flex items-center justify-center w-24 h-24 bg-gradient-to-r ${getInterestColor(
-                results.primary_interest,
-              )} rounded-full mb-6`}
+          <div className="mt-4">
+            <label className="text-sm text-gray-300 mr-2">View attempt:</label>
+            <select
+              value={selectedId ?? ""}
+              onChange={(e) => onSelect(e.target.value)}
+              className="bg-white/5 text-white rounded px-3 py-2"
             >
-              <Brain className="w-12 h-12 text-white" />
-            </div>
-            <h2 className="text-4xl font-bold text-white mb-4 capitalize">{results.primary_interest}</h2>
-            <p className="text-xl text-gray-300 max-w-2xl mx-auto">
-              {getInterestDescription(results.primary_interest)}
-            </p>
-          </CardContent>
-        </Card>
+              {history.map((h) => (
+                <option key={h.id} value={h.id}>
+                  {new Date(h.created_at || "").toLocaleString()}
+                </option>
+              ))}
+            </select>
+          </div>
 
-        {/* Interest Scores */}
-        <Card className="bg-white/10 backdrop-blur-lg border-white/20 mb-8">
-          <CardHeader>
-            <CardTitle className="text-2xl text-white text-center">Your Interest Profile</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            {[
-              { name: "Realistic", score: results.realistic_score, color: "from-green-500 to-teal-500" },
-              { name: "Investigative", score: results.investigative_score, color: "from-blue-500 to-cyan-500" },
-              { name: "Artistic", score: results.artistic_score, color: "from-purple-500 to-pink-500" },
-              { name: "Social", score: results.social_score, color: "from-orange-500 to-red-500" },
-              { name: "Enterprising", score: results.enterprising_score, color: "from-yellow-500 to-orange-500" },
-              { name: "Conventional", score: results.conventional_score, color: "from-gray-500 to-slate-500" },
-            ].map((interest) => (
-              <div key={interest.name} className="space-y-2">
-                <div className="flex justify-between items-center">
-                  <span className="text-white font-medium text-lg">{interest.name}</span>
-                  <span className="text-gray-300">
-                    {interest.score}/20 ({Math.round((interest.score / 20) * 100)}%)
-                  </span>
-                </div>
-                <div className="relative">
-                  <Progress value={(interest.score / 20) * 100} className="h-3 bg-white/10" />
-                  <div
-                    className={`absolute top-0 left-0 h-3 bg-gradient-to-r ${interest.color} rounded-full transition-all duration-1000`}
-                    style={{ width: `${(interest.score / 20) * 100}%` }}
-                  />
-                </div>
-              </div>
-            ))}
-          </CardContent>
-        </Card>
-
-        {/* Career Recommendations */}
-        <div className="grid lg:grid-cols-2 gap-8 mb-8">
-          <Card className="bg-white/10 backdrop-blur-lg border-white/20">
-            <CardHeader>
-              <CardTitle className="text-2xl text-white flex items-center">
-                <Briefcase className="w-6 h-6 mr-3" />
-                Recommended Careers
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {results.recommended_careers.map((career, index) => (
-                  <div
-                    key={index}
-                    className="p-4 bg-white/5 rounded-lg border border-white/10 hover:bg-white/10 transition-colors"
-                  >
-                    <h3 className="text-lg font-semibold text-white">{career}</h3>
-                    <p className="text-gray-400 text-sm">
-                      High match based on your {results.primary_interest} interests
-                    </p>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-white/10 backdrop-blur-lg border-white/20">
-            <CardHeader>
-              <CardTitle className="text-2xl text-white flex items-center">
-                <BookOpen className="w-6 h-6 mr-3" />
-                Recommended Courses
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {results.recommended_courses.map((course, index) => (
-                  <div
-                    key={index}
-                    className="p-4 bg-white/5 rounded-lg border border-white/10 hover:bg-white/10 transition-colors"
-                  >
-                    <h3 className="text-lg font-semibold text-white">{course}</h3>
-                    <p className="text-gray-400 text-sm">Aligns with your career interests and goals</p>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Action Buttons */}
-        <div className="text-center space-y-4 mb-12">
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button
-              size="lg"
-              onClick={() => router.push("/dashboard")}
-              className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white"
-            >
-              View Dashboard
+          <div className="flex justify-center gap-4 mt-6">
+            <Button onClick={() => router.push("/quiz/review")} variant="outline" className="bg-white/10 border-white/20">
+              <Clock className="w-4 h-4 mr-2" /> View Quiz History
             </Button>
-            <Button
-              size="lg"
-              variant="outline"
-              className="bg-white/10 border-white/20 text-white hover:bg-white/20"
-              onClick={handleDownloadReport}
-            >
-              <Download className="w-5 h-5 mr-2" />
-              Download Report
+            <Button onClick={() => router.push("/quiz")} className="bg-gradient-to-r from-blue-600 to-purple-600">
+              <RefreshCw className="w-4 h-4 mr-2" /> Retake Quiz
             </Button>
-            <Button
-              size="lg"
-              variant="outline"
-              className="bg-white/10 border-white/20 text-white hover:bg-white/20"
-              onClick={handleShareResults}
-            >
-              <Share2 className="w-5 h-5 mr-2" />
-              Share Results
+            <Button onClick={() => navigator.share?.({ title: "My Career Results", text: "Check my career matches!" }).catch(() => navigator.clipboard.writeText(window.location.href))} variant="outline" className="bg-white/10 border-white/20">
+              <Share2 className="w-4 h-4 mr-2" /> Share
             </Button>
           </div>
-          <div className="flex flex-col sm:flex-row gap-2 justify-center items-center text-gray-400 text-sm">
-            <span>
-              Want to retake the quiz?{" "}
-              <button onClick={() => router.push("/quiz")} className="text-blue-400 hover:text-blue-300 underline">
-                Click here
-              </button>
-            </span>
-            <span className="hidden sm:inline">•</span>
-            <button onClick={() => router.push("/quiz/review")} className="text-blue-400 hover:text-blue-300 underline">
-              Review previous answers
-            </button>
+        </div>
+
+        <div className="grid md:grid-cols-3 gap-6">
+          <div className="md:col-span-2 space-y-6">
+            {results.recommendations?.map((rec, idx) => (
+              <Card key={idx} className="bg-white/10 backdrop-blur-lg border-white/20">
+                <CardContent className="p-6">
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-3 mb-2">
+                        <h3 className="text-xl font-bold text-white">{rec["Job Title"]}</h3>
+                        <span className="text-xs text-gray-300 px-2 py-1 rounded bg-white/5">{rec.Priority} Priority</span>
+                      </div>
+                      <p className="text-gray-300 mb-4">{rec.Description}</p>
+                    </div>
+                    <div className="text-right ml-4">
+                      <div className="flex items-center gap-1 mb-1">
+                        <Star className="w-4 h-4 text-yellow-400" />
+                        <span className="text-white font-bold">{Math.round((rec.Similarity ?? 0) * 100)}%</span>
+                      </div>
+                      <p className="text-xs text-gray-400">Match Score</p>
+                    </div>
+                  </div>
+
+                  <div className="grid md:grid-cols-2 gap-4 mb-4">
+                    <div>
+                      <p className="text-sm font-medium text-gray-300 mb-2">Top Skills</p>
+                      <div className="flex flex-wrap gap-2">
+                        {rec["Top 3 Skills"]?.map((s, i) => (
+                          <span key={i} className="px-2 py-1 text-xs bg-white/5 rounded border border-white/10 text-white">{s}</span>
+                        ))}
+                      </div>
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-gray-300 mb-2">Education</p>
+                      <div className="flex items-center gap-2">
+                        <BookOpen className="w-4 h-4 text-blue-400" />
+                        <span className="text-white text-sm">{rec["Minimum Education"]}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex justify-between items-center pt-4 border-t border-white/10">
+                    <div className="text-xs text-gray-400">Last updated {new Date(results.created_at || "").toLocaleString()}</div>
+                    <Button size="sm" variant="outline" className="bg-white/10 border-white/20">
+                      Learn More <ArrowRight className="w-3 h-3 ml-1" />
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+
+          <div className="space-y-6">
+            <Card className="bg-white/10 backdrop-blur-lg border-white/20">
+              <CardHeader>
+                <CardTitle className="text-white">Your Personality Profile</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  {Object.entries(results.riasec_scores || {}).map(([k, v]) => (
+                    <div key={k} className="space-y-1">
+                      <div className="flex justify-between">
+                        <span className="text-gray-300">{(riasecLabels as any)[k] ?? k}</span>
+                        <span className="text-white font-medium">{Math.round((v ?? 0) * 100)}%</span>
+                      </div>
+                      <Progress value={Math.round((v ?? 0) * 100)} className="h-2 bg-white/10" />
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="bg-white/10 backdrop-blur-lg border-white/20">
+              <CardHeader>
+                <CardTitle className="text-white">Next Steps</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="flex flex-col gap-3">
+                  <Button onClick={() => router.push("/quiz/review")} className="bg-gradient-to-r from-green-600 to-blue-600">
+                    <Clock className="w-4 h-4 mr-2" /> View Quiz History
+                  </Button>
+                  <Button onClick={() => router.push("/dashboard")} variant="outline" className="bg-white/10 border-white/20">
+                    <Users className="w-4 h-4 mr-2" /> Go to Dashboard
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
           </div>
         </div>
       </div>
