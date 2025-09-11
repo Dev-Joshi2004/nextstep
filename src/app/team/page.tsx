@@ -151,9 +151,9 @@ export default function TeamPage() {
       : teamMembers.filter((member) => member.department === selectedDepartment)
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 text-white">
       {/* Hero Section */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-primary/5 via-background to-accent/5 py-24">
+      <section className="relative overflow-hidden  py-24">
         <div className="absolute inset-0 bg-grid-pattern opacity-5"></div>
         <div className="container mx-auto px-4 relative">
           <div className="text-center max-w-4xl mx-auto">
@@ -161,15 +161,15 @@ export default function TeamPage() {
               <Users className="w-4 h-4 text-primary" />
               <span className="text-sm font-medium text-card-foreground">Meet Our Team</span>
             </div>
-            <h1 className="text-5xl md:text-6xl font-bold text-foreground mb-6 text-balance">
+            <h1 className="text-5xl md:text-6xl font-bold text-white mb-6 text-balance">
               The Minds Behind Your
-              <span className="text-primary"> Career Journey</span>
+              <span className="bg-gradient-to-r from-blue-400 via-purple-400 to-cyan-400 bg-clip-text text-transparent animate-pulse"> Career Journey</span>
             </h1>
-            <p className="text-xl text-muted-foreground mb-8 text-pretty max-w-3xl mx-auto leading-relaxed">
+            <p className="text-xl text-white/50 mb-8 text-pretty max-w-3xl mx-auto leading-relaxed">
               We're a diverse team of technologists, designers, and career experts united by one mission: helping you
               discover and pursue your ideal career path through the power of AI.
             </p>
-            <div className="flex flex-wrap justify-center gap-6 text-sm text-muted-foreground">
+            <div className="flex flex-wrap justify-center gap-6 text-sm text-white/70">
               <div className="flex items-center gap-2">
                 <Award className="w-4 h-4 text-accent" />
                 <span>50+ Years Combined Experience</span>
@@ -194,7 +194,7 @@ export default function TeamPage() {
             {departments.map((dept) => (
               <Button
                 key={dept}
-                variant={selectedDepartment === dept ? "default" : "outline"}
+                variant={selectedDepartment === dept ? "default" : "secondary"}
                 onClick={() => setSelectedDepartment(dept)}
                 className="rounded-full transition-all duration-300"
               >
