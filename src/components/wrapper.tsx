@@ -22,7 +22,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
-import { Brain, Menu, User, Settings, LogOut, BarChart3, BookOpen, Phone, Info, History } from "lucide-react"
+import { Brain, Menu, User, Settings, LogOut, BarChart3, BookOpen, Phone, Info, History, Group, Users } from "lucide-react"
 import type { User as SupabaseUser } from "@supabase/supabase-js"
 import Image from "next/image"
 import Head from "next/head"
@@ -159,6 +159,10 @@ function Header() {
                         <Link href="/about" className="group inline-flex h-10 w-max items-center justify-center rounded-xl bg-transparent px-4 py-2 text-sm font-medium text-gray-300 hover:text-white hover:bg-white/10 transition-all duration-200 backdrop-blur-sm cursor-pointer">
                             <Info className="w-4 h-4 mr-2 text-white" />
                             About
+                        </Link>
+                        <Link href="/team" className="group inline-flex h-10 w-max items-center justify-center rounded-xl bg-transparent px-4 py-2 text-sm font-medium text-gray-300 hover:text-white hover:bg-white/10 transition-all duration-200 backdrop-blur-sm cursor-pointer">
+                            <Users className="w-4 h-4 mr-2 text-white" />
+                            Our Team
                         </Link>
                         <Link href="/contact" className="group inline-flex h-10 w-max items-center justify-center rounded-xl bg-transparent px-4 py-2 text-sm font-medium text-gray-300 hover:text-white hover:bg-white/10 transition-all duration-200 backdrop-blur-sm cursor-pointer">
                             <Phone className="w-4 h-4 mr-2" />
