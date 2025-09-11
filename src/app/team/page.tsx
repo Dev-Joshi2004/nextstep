@@ -306,9 +306,9 @@ export default function TeamPage() {
       </section>
 
       {/* CTA Section */}
-      <section className="py-20 bg-gradient-to-r from-primary/5 to-accent/5">
+      <section className="py-20">
         <div className="container mx-auto px-4 text-center">
-          <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-6">Ready to Start Your Career Journey?</h2>
+          <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">Ready to Start Your Career Journey?</h2>
           <p className="text-lg text-muted-foreground mb-8 max-w-2xl mx-auto">
             Our team is here to guide you every step of the way. Take our AI-powered assessment and discover your ideal
             career path today.
