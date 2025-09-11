@@ -130,7 +130,7 @@ export default function ResultsPage() {
             <select
               value={selectedId ?? ""}
               onChange={(e) => onSelect(e.target.value)}
-              className="bg-white/5 text-white rounded px-3 py-2"
+              className="bg-white/5 text-black rounded px-3 py-2"
             >
               {history.map((h) => (
                 <option key={h.id} value={h.id}>
