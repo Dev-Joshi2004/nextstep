@@ -93,3 +93,9 @@ Frontend Developer:
 
 Email:
 devjoshi981852@gmail.com
+
+---
+
+## 🙌 Special Thanks
+
+A special thanks to **Akshay Arora** (https://github.com/akshay-1a) for his valuable technical support, guidance, and contribution throughout the development of this project.
