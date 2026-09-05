@@ -3,8 +3,12 @@
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Github, Linkedin, Mail, MapPin, Calendar, Users, Award, Zap } from "lucide-react"
+import { Github, Linkedin, Mail, MapPin, Calendar, Users, Award, Zap, Router } from "lucide-react"
 import { useState } from "react"
+import Link from "next/link"
+import ContactPage from "../contact/page"
+import { useRouter } from "next/navigation"
+import QuizPage from "../quiz/page"
 
 interface TeamMember {
   id: string
@@ -15,7 +19,7 @@ interface TeamMember {
   quote: string
   image: string
   skills: string[]
-  experience: string
+  institution: string
   location: string
   joinDate: string
   social: {
@@ -23,125 +27,128 @@ interface TeamMember {
     github?: string
     email: string
   }
-  achievements: string[]
+  // achievements: string[]
 }
 
 const teamMembers: TeamMember[] = [
   {
     id: "1",
-    name: "Dr. Sarah Chen",
-    role: "Chief Technology Officer",
+    name: "Mayank Baliyan",
+    role: "ML Engineer",
     department: "Engineering",
-    bio: "Leading AI innovation with 12+ years in machine learning and career analytics. PhD in Computer Science from Stanford.",
+    bio: "Leading AI innovation in machine learning and career analytics.",
     quote: "Technology should empower people to discover their true potential.",
-    image: "/professional-woman-tech-leader.png",
-    skills: ["Machine Learning", "Python", "TensorFlow", "Leadership"],
-    experience: "12+ years",
-    location: "San Francisco, CA",
-    joinDate: "2021",
+    image: "/mayank.jpg",
+    skills: ["Python", "Numpy", "Pandas", "Machine Learning"],
+    institution: "Student at ADGIPS",
+    location: "New Delhi",
+    joinDate: "2023",
     social: {
-      linkedin: "https://linkedin.com/in/sarahchen",
-      github: "https://github.com/sarahchen",
-      email: "sarah@nextstep.ai",
+      linkedin: "http://linkedin.com/in/mayank-baliyan-6710252a1",
+      github: "https://github.com/Mayank-110",
+      email: "baliyan.mayank.2@gmail.com",
     },
-    achievements: ["AI Innovation Award 2023", "Published 25+ Research Papers", "TEDx Speaker"],
+    // achievements: ["AI Innovation Award 2023", "Published 25+ Research Papers", "TEDx Speaker"],
   },
   {
     id: "2",
-    name: "Marcus Rodriguez",
-    role: "Senior ML Engineer",
+    name: "Kanishk Mishra",
+    role: "Backend developer",
     department: "Engineering",
-    bio: "Specializes in recommendation systems and natural language processing. Former Google AI researcher.",
+    bio: "Transforms backend architectures into efficient, production-ready systems with expertise in Python, databases, and Django.",
     quote: "Every algorithm should tell a story that helps someone find their path.",
-    image: "/professional-hispanic-man-engineer.jpg",
-    skills: ["Deep Learning", "NLP", "Scala", "Data Engineering"],
-    experience: "8+ years",
-    location: "Austin, TX",
-    joinDate: "2022",
+    image: "/kanishk.jpg",
+    skills: [" Python", "PostgreSQL", "SQLite", "Django"],
+    institution: "Student at ADGIPS",
+    location: "New Delhi",
+    joinDate: "2023",
     social: {
-      linkedin: "https://linkedin.com/in/marcusrodriguez",
-      github: "https://github.com/mrodriguez",
-      email: "marcus@nextstep.ai",
+      linkedin: "https://www.linkedin.com/in/kanishk-kumar-83603b194?utm_source=share&utm_campaign=share_via&utm_content=profile&utm_medium=android_app",
+      github: "https://github.com/KanishkMishra143",
+      email: "kanishk.kumar412@gmail.com",
     },
-    achievements: ["Google AI Residency", "Open Source Contributor", "ML Conference Speaker"],
+    // achievements: ["Google AI Residency", "Open Source Contributor", "ML Conference Speaker"],
   },
   {
     id: "3",
-    name: "Priya Patel",
+    name: "Karan Jha",
     role: "Head of Product Design",
     department: "Design",
-    bio: "Creates intuitive experiences that make career discovery accessible. Previously at Airbnb and Figma.",
+    bio: "Creates intuitive experiences that make career discovery accessible.",
     quote: "Great design makes complex decisions feel simple and empowering.",
-    image: "/professional-indian-woman-designer.jpg",
-    skills: ["UX Design", "Product Strategy", "User Research", "Prototyping"],
-    experience: "10+ years",
-    location: "New York, NY",
-    joinDate: "2021",
+    image: "/karan.jpg",
+    skills: ["UX Design", "Product Strategy", "User Research", "Prototyping","Nextjs","postgresql"],
+    institution: "Student at ADGIPS",
+    location: "New Delhi",
+    joinDate: "2023",
     social: {
-      linkedin: "https://linkedin.com/in/priyapatel",
-      email: "priya@nextstep.ai",
+      linkedin: "https://www.linkedin.com/in/karanjhaa?utm_source=share&utm_campaign=share_via&utm_content=profile&utm_medium=android_app ",
+      github:"https://github.com/Karan-jhaa",
+      email: "kjha32990@gmail.com",
     },
-    achievements: ["Design Excellence Award", "Mentor at ADPList", "Featured in Design+Code"],
+    // achievements: ["Design Excellence Award", "Mentor at ADPList", "Featured in Design+Code"],
   },
   {
     id: "4",
-    name: "James Kim",
+    name: "Dimple",
     role: "Data Scientist",
     department: "Analytics",
-    bio: "Transforms career data into actionable insights. PhD in Statistics with expertise in behavioral analytics.",
+    bio: "Transforms career data into actionable insights.",
     quote: "Data tells us where we've been, but insights show us where we can go.",
-    image: "/professional-asian-man-data-scientist.jpg",
-    skills: ["Statistics", "R", "SQL", "Data Visualization"],
-    experience: "6+ years",
-    location: "Seattle, WA",
-    joinDate: "2022",
+    image: "/dimple.jpg",
+    skills: ["Python, Pandas, Numpy , Machine,  Learning, Power BI"],
+    institution: "Student at ADGIPS",
+    location: "New Delhi",
+    joinDate: "2023",
     social: {
-      linkedin: "https://linkedin.com/in/jameskim",
-      github: "https://github.com/jkim",
-      email: "james@nextstep.ai",
+      linkedin: "https://www.linkedin.com/in/dimple-saxena-2b146a361?utm_source=share&utm_campaign=share_via&utm_content=profile&utm_medium=android_app",
+      github: "https://github.com/Dimple043-tech",
+      email: "dimplesaxenax@gmail.com",
     },
-    achievements: ["Kaggle Grandmaster", "Published in Nature", "Data Science Bootcamp Instructor"],
+    // achievements: ["Kaggle Grandmaster", "Published in Nature", "Data Science Bootcamp Instructor"],
   },
   {
     id: "5",
-    name: "Elena Vasquez",
-    role: "Career Counselor & Content Lead",
+    name: "Mrunmai Tayade",
+    role: "Content Lead",
     department: "Content",
-    bio: "Bridges the gap between technology and human guidance. Licensed career counselor with 15+ years experience.",
+    bio: "Bridges the gap between technology and human guidance.",
     quote: "Technology amplifies human wisdom, but never replaces the human touch.",
-    image: "/professional-latina-woman-counselor.jpg",
-    skills: ["Career Counseling", "Content Strategy", "Psychology", "Communication"],
-    experience: "15+ years",
-    location: "Denver, CO",
-    joinDate: "2021",
+    image: "/mrunmai.jpg",
+    skills: ["Communication", "Content Creation", "Presentation Design", "Documentation", "Team Collaboration"],
+    institution: "Student at ADGIPS",
+    location: "New Delhi",
+    joinDate: "2023",
     social: {
-      linkedin: "https://linkedin.com/in/elenavasquez",
-      email: "elena@nextstep.ai",
+      linkedin: "https://www.linkedin.com/in/mrunmai-tayade-517b61374?utm_source=share&utm_campaign=share_via&utm_content=profile&utm_medium=android_app",
+      github:"https://github.com/mrunmaitayade",
+      email: "tayademrunmai@gmail.com",
     },
-    achievements: ["Certified Career Counselor", "Author of 2 Books", "1000+ Students Mentored"],
+    // achievements: ["Certified Career Counselor", "Author of 2 Books", "1000+ Students Mentored"],
   },
   {
     id: "6",
-    name: "Alex Thompson",
+    name: "Dev Joshi",
     role: "Full Stack Developer",
     department: "Engineering",
     bio: "Builds scalable platforms that connect students with their future. Passionate about clean code and user experience.",
     quote: "Code is poetry that solves real problems for real people.",
-    image: "/professional-person-developer-coding.jpg",
-    skills: ["React", "Node.js", "TypeScript", "AWS"],
-    experience: "7+ years",
-    location: "Portland, OR",
+    image: "/dev.jpg",
+    skills: ["React", "Node.js", "TypeScript", "postgresql","figma"],
+    institution: "Student at ADGIPs",
+    location: "New Delhi",
     joinDate: "2023",
     social: {
-      linkedin: "https://linkedin.com/in/alexthompson",
-      github: "https://github.com/athompson",
-      email: "alex@nextstep.ai",
+      linkedin: "https://www.linkedin.com/in/dev-joshi-069870370?utm_source=share&utm_campaign=share_via&utm_content=profile&utm_medium=android_app",
+      github: "https://github.com/Dev-Joshi2004",
+      email: "devjoshi981852@gmail.com",
     },
-    achievements: ["Open Source Maintainer", "Tech Meetup Organizer", "Hackathon Winner"],
+    // achievements: ["Open Source Maintainer", "Tech Meetup Organizer", "Hackathon Winner"],
   },
 ]
 
 export default function TeamPage() {
+  const router= useRouter();
   const [selectedDepartment, setSelectedDepartment] = useState<string>("All")
   const departments = ["All", "Engineering", "Design", "Analytics", "Content"]
 
@@ -172,7 +179,7 @@ export default function TeamPage() {
             <div className="flex flex-wrap justify-center gap-6 text-sm text-white/70">
               <div className="flex items-center gap-2">
                 <Award className="w-4 h-4 text-accent" />
-                <span>50+ Years Combined Experience</span>
+                <span>Innovative Career Guidance</span>
               </div>
               <div className="flex items-center gap-2">
                 <Zap className="w-4 h-4 text-accent" />
@@ -180,7 +187,7 @@ export default function TeamPage() {
               </div>
               <div className="flex items-center gap-2">
                 <Users className="w-4 h-4 text-accent" />
-                <span>10,000+ Students Helped</span>
+                <span>Empowering Students</span>
               </div>
             </div>
           </div>
@@ -223,21 +230,41 @@ export default function TeamPage() {
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                   <div className="absolute bottom-4 left-4 right-4 transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300 opacity-0 group-hover:opacity-100">
-                    <div className="flex gap-2">
-                      {member.social.linkedin && (
+                   <div className="flex gap-2">
+                    {member.social.linkedin && (
+                      <a
+                        href={member.social.linkedin}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
                         <Button size="sm" variant="secondary" className="rounded-full p-2">
                           <Linkedin className="w-4 h-4" />
                         </Button>
-                      )}
-                      {member.social.github && (
+                      </a>
+                    )}
+                    {member.social.github && (
+                      <a
+                        href={member.social.github}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
                         <Button size="sm" variant="secondary" className="rounded-full p-2">
                           <Github className="w-4 h-4" />
                         </Button>
-                      )}
-                      <Button size="sm" variant="secondary" className="rounded-full p-2">
-                        <Mail className="w-4 h-4" />
-                      </Button>
-                    </div>
+                      </a>
+                    )}
+                   {member.social.email && (
+                      <a
+                        href={`https://mail.google.com/mail/?view=cm&fs=1&to=${member.social.email}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        <Button size="sm" variant="secondary" className="rounded-full p-2">
+                          <Mail className="w-4 h-4" />
+                        </Button>
+                      </a>
+                    )}
+                  </div>
                   </div>
                 </div>
 
@@ -266,7 +293,7 @@ export default function TeamPage() {
                     <div className="flex items-center gap-2 text-xs text-muted-foreground">
                       <Calendar className="w-3 h-3" />
                       <span>
-                        Joined {member.joinDate} • {member.experience}
+                        Joined {member.joinDate} • {member.institution}
                       </span>
                     </div>
                   </div>
@@ -287,7 +314,7 @@ export default function TeamPage() {
                     </div>
                   </div>
 
-                  <div>
+                  {/* <div>
                     <p className="text-xs font-medium text-card-foreground mb-2">Recent Achievements</p>
                     <ul className="text-xs text-muted-foreground space-y-1">
                       {member.achievements.slice(0, 2).map((achievement, idx) => (
@@ -297,7 +324,7 @@ export default function TeamPage() {
                         </li>
                       ))}
                     </ul>
-                  </div>
+                  </div> */}
                 </CardContent>
               </Card>
             ))}
@@ -314,10 +341,10 @@ export default function TeamPage() {
             career path today.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button size="lg" className="rounded-full">
+            <Button size="lg" className="rounded-full" onClick={()=>router.push("/quiz")} >
               Take Career Assessment
             </Button>
-            <Button size="lg" variant="outline" className="rounded-full bg-transparent">
+            <Button size="lg" variant="outline" className="rounded-full bg-transparent" onClick={()=>router.push("/contact")}>
               Contact Our Team
             </Button>
           </div>
