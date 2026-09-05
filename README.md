@@ -37,24 +37,38 @@ The platform uses a RIASEC-based psychological assessment and a Machine Learning
 
 ### Home Page
 
-![Home](Home%20page.jpeg)
+<img width="1080" height="584" alt="Home page" src="https://github.com/user-attachments/assets/8e3a41e1-f5dc-4384-9f47-a877b928c843" />
+
 
 ---
 
 ### RIASEC Assessment
 
-![Quiz](quizz.jpeg)
+<img width="998" height="595" alt="quizz" src="https://github.com/user-attachments/assets/fe3a426f-f0c4-4a16-a952-93ba927268aa" />
+
 
 ---
 
 ### Recommendation Page
 
-![Result](recommendations.jpeg)
+<img width="1080" height="581" alt="recommendations" src="https://github.com/user-attachments/assets/f56d2ce3-c5d4-49f0-aaa8-5b0a1287320f" />
+
 
 ---
 
 ### Result Page
-![Result](result.jpeg)
+
+<img width="1080" height="581" alt="result" src="https://github.com/user-attachments/assets/c49561b2-7576-444d-beaa-1f55eba36395" />
+
+
+---
+
+### Team Member
+
+<img width="1033" height="587" alt="team" src="https://github.com/user-attachments/assets/98bfdbc9-2710-429e-95d1-434139289f25" />
+
+<img width="1049" height="553" alt="team members" src="https://github.com/user-attachments/assets/8dc20ce7-2e08-4334-b489-9ee6ebe8406e" />
+
 
 ---
 
