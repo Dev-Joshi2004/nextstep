@@ -1,36 +1,81 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# NextStep Career Recommendation Platform (SIH 2025)
 
-## Getting Started
+## Overview
 
-First, run the development server:
+NextStep is an AI-powered career recommendation platform designed to help students choose suitable career paths based on their interests, personality traits, and academic preferences.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+The platform uses a RIASEC-based psychological assessment and a Machine Learning recommendation engine to generate personalized career recommendations.
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+---
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Features
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- 24-question RIASEC psychological assessment
+- Personalized career recommendations
+- Degree and educational qualification suggestions
+- Entrance exam recommendations
+- Required skills for each career
+- O*NET dataset integration
+- Machine Learning recommendation engine using Cosine Similarity
 
-## Learn More
+---
 
-To learn more about Next.js, take a look at the following resources:
+## Tech Stack
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- Python
+- Pandas
+- NumPy
+- Scikit-learn
+- FastAPI
+- HTML
+- CSS
+- JavaScript
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+---
 
-## Deploy on Vercel
+## Screenshots
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### Home Page
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+![Home](Home%20page.jpeg)
+
+---
+
+### RIASEC Assessment
+
+![Quiz](quizz.jpeg)
+
+---
+
+### Recommendation Page
+
+![Result](recommendations.jpeg)
+
+---
+
+### Result Page
+![Result](result.jpeg)
+
+---
+
+## Live Website
+
+The project is currently deployed at:
+
+**Website:** https://lnkd.in/gNzxHhdY
+
+---
+
+## Team
+
+SIH 2025 Team Project
+
+Frontend Developer:
+**Dev Joshi**
+
+---
+
+## Contact
+
+Email:
+devjoshi981852@gmail.com
