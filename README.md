@@ -76,7 +76,7 @@ The platform uses a RIASEC-based psychological assessment and a Machine Learning
 
 The project is currently deployed at:
 
-**Website:** https://lnkd.in/gNzxHhdY
+**Website:** [https://nexttstep.vercel.app]
 
 ---
 
